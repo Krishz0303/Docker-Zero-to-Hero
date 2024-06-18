@@ -444,7 +444,24 @@ Hello Docker
 $ sudo docker run <image-id> Ben
 Hello Ben
 
+**EXPOSE and -p:**
 
+Basically, you have three (four) options:
 
+1.Neither specify EXPOSE nor -p
+2.Only specify EXPOSE
+3.Specify EXPOSE and -p
+4.Only specify -p which implicitly does EXPOSE
+
+If you specify neither EXPOSE nor -p, the service in the container will only be accessible from inside the container itself.
+
+If you EXPOSE a port, the service in the container is not accessible from outside Docker, but from inside other Docker containers. So this is good for inter-container communication.
+
+If you EXPOSE and -p a port, the service in the container is accessible from anywhere, even outside Docker.
+
+If you do -p, but do not EXPOSE, Docker does an implicit EXPOSE. This is because if a port is open to the public, it is automatically also open to other Docker containers. Hence -p includes EXPOSE. This is effectively same as 3).
+
+Short answer: EXPOSE is a way of documenting that the container is listening on this port.
+--publish (or -p) is a way of mapping a host port to a running container port
 
 ### You must be feeling like a champ already 
