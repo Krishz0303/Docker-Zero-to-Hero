@@ -359,4 +359,92 @@ c5ff2d88f679: Mounted from library/ubuntu
 latest: digest: sha256:6e49841ad9e720a7baedcd41f9b666fcd7b583151d0763fe78101bb8221b1d88 size: 1157
 ```
 
+
+--------
+There are three types of instructions (commands) that you use to build and run Dockerfiles:
+
+RUN. Mainly used to build images and install applications and packages, RUN builds a new layer over an existing image by committing the results.
+CMD. Sets default parameters that can be overridden from the Docker Command Line Interface (CLI) when a container is running.
+ENTRYPOINT. Default parameters that cannot be overridden when Docker Containers run with CLI parameters.
+
+
+
+**Story:**
+Docker has a default entrypoint which is /bin/sh -c but does not have a default command. If you omit Entrypoint, docker will use /bin/sh -c bash to run your container.
+
+When you run docker like this: docker run -i -t ubuntu bash the entrypoint is the default /bin/sh -c, the image is ubuntu and the command is bash.
+
+The command is run via the entrypoint. i.e., the actual thing that gets executed is /bin/sh -c bash. This allowed Docker to implement RUN quickly by relying on the shell's parser.
+
+Later on, people asked to be able to customize this, so ENTRYPOINT and --entrypoint were introduced.
+
+Everything after the image name, ubuntu in the example above, is the command and is passed to the entrypoint. When using the CMD instruction, it is exactly as if you were executing
+docker run -i -t ubuntu <cmd>
+The parameter of the entrypoint is <cmd>.
+
+You will also get the same result if you instead type this command docker run -i -t ubuntu: a bash shell will start in the container because in the ubuntu Dockerfile a default CMD is specified:
+CMD ["bash"].
+
+
+
+
+
+
+
+They both specify programs that execute when the container starts running, but:
+
+CMD commands are ignored by Daemon when there are parameters stated within the docker run command.
+ENTRYPOINT instructions are not ignored, but instead, are appended as command-line parameters by treating those as arguments of the command.
+
+**4 scenarios:**
+1.No EP and no CMD: The container will start and immediately exit since there is no command to run. Since we should have atleast one. But we can have scerios where we mgiht not need any like:
+-when you want to use the container as a base image for other images.
+-Containers that are used for specific utility tasks like temporary containers for file manipulation, may not need a default command as they are started for a specific, one-time purpose.
+
+
+2.EP only: the specified command will be run when the container starts, and any command specified when running the container will be passed as arguments to the ENTRYPOINT command.
+
+Docker file
+
+  FROM centos:8.1.1911
+
+  ENTRYPOINT ["echo", "Hello Docker"]
+Run result
+
+$ sudo docker run <image-id> //without runtime arguments
+Hello Docker
+$ sudo docker run <image-id> hostname   # hostname as parameter to exec //with runtime arguments
+Hello Docker hostname
+
+3.CMD only: the command will be run as the container's main command and will be default and if we give alternative arguments then it will take those.
+
+Docker file
+
+  FROM centos:8.1.1911
+
+  CMD ["echo", "Hello Docker"]
+Run result
+
+$ sudo docker run <image-id>
+Hello Docker
+$ sudo docker run <image-id> hostname   # hostname is exec to override CMD
+244be5006f32
+
+
+4.EP+CMD: The ENTRYPOINT specifies the main command that will always be executed when the container starts. The CMD specifies arguments that will be fed to the ENTRYPOINT as default arguments. CMD will be overridden when running the container with alternative arguments. Entry point has higher priority.
+
+FROM centos:8.1.1911
+
+  ENTRYPOINT ["echo", "Hello"]
+  CMD ["Docker"]
+Run result
+
+$ sudo docker run <image-id>
+Hello Docker
+$ sudo docker run <image-id> Ben
+Hello Ben
+
+
+
+
 ### You must be feeling like a champ already 
